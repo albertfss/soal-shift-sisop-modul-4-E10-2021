@@ -61,13 +61,6 @@ void linkDownloads(const char *path, char *fpath) {
         sprintf(fpath, "%s%s",dirpath,path);
 }
 
-int is_regular_file( char *path)
-{
-    struct stat path_stat;
-    stat(path, &path_stat);
-    return S_ISREG(path_stat.st_mode);
-}
-
 char endec1(char x) {
 	int max = 26;
 
@@ -87,47 +80,131 @@ char endec1(char x) {
 	return x;
 }
 
-void encrypt1string(char * in,int stop){
-	if(strcmp(in,".") == 0 || strcmp(in,"..") == 0) return;
-	for(int i=0;i<stop;i++){
-		in[i] = endec1(in[i]);
+void encryptedString1(char * string){
+	char filepath[500];
+	int start = 0;
+	char *tmpChrP;
+	
+
+	strcpy(filepath,string);
+	if ((tmpChrP = strrchr(filepath+1,'/'))!=NULL) {
+		start = tmpChrP-filepath;
+	} else {
+	// Else, this is the /encv1_ itself, there's nothing to encrypt or decrypt
+		return;
 	}
+
+	int fileExtIdx;
+	if ((tmpChrP = strrchr(filepath, '.'))!=NULL) {
+		fileExtIdx = tmpChrP-filepath;
+	} else {
+		fileExtIdx = strlen(filepath);
+	}
+
+	while(start != fileExtIdx) {
+	// Iterate until file extension
+		filepath[start] = endec1(filepath[start]);
+		start++;
+	}
+	rename(string,filepath);
 }
 
-void decrypt1string(char * in,int stop){
-	if(strcmp(in,".") == 0 || strcmp(in,"..") == 0) return;
-	for(int i=0;i<stop-1;i++){
-		in[i] = endec1(in[i]);
+void decryptedString1(char * string){
+	char filepath[500];
+	int start = 0;
+	char *tmpChrP;
+	
+
+	strcpy(filepath,string);
+	if ((tmpChrP = strrchr(filepath+1,'/'))!=NULL) {
+		start = tmpChrP-filepath;
+	} else {
+	// Else, this is the /encv1_ itself, there's nothing to encrypt or decrypt
+		return;
 	}
+
+	int fileExtIdx;
+	if ((tmpChrP = strrchr(filepath, '.'))!=NULL) {
+		fileExtIdx = tmpChrP-filepath;
+	} else {
+		fileExtIdx = strlen(filepath);
+	}
+
+	while(start != fileExtIdx) {
+	// Iterate until file extension
+		filepath[start] = endec1(filepath[start]);
+		start++;
+	}
+	rename(string,filepath);
 }
 
-void getEncrypted1String(char * string){
-	if(strcmp(string,".") == 0 || strcmp(string,"..") == 0) return;
-	int stop = strlen(string);
-	for(int i=stop;i>=0;i--){
-		if(string[i] == '/') break;
-		if(string[i] == '.'){
-			stop = i;
-			break;
+void encryptDir1(const char *dirPath) {
+	char currDir[3000];
+	strcpy(currDir,dirPath);
+
+	DIR *dp;
+	struct dirent *de;
+	dp = opendir(currDir);
+	if (dp == NULL)
+		return;
+
+	while ((de = readdir(dp)) != NULL) {
+		if (strcmp(de->d_name,".")==0 || strcmp(de->d_name,"..")==0) {
+			continue;
+		}
+		struct stat st;
+		memset(&st, 0, sizeof(st));
+		st.st_ino = de->d_ino;
+		st.st_mode = de->d_type << 12;
+		char fullpath[4000];
+		sprintf(fullpath,"%s/%s",currDir,de->d_name);
+		if (S_ISREG(st.st_mode)) {
+			encryptedString1(fullpath);
+		} else if (S_ISDIR(st.st_mode)) {
+			encryptDir1(fullpath);
+			encryptedString1(fullpath);
+		} else {
+			continue;
 		}
 	}
-	encrypt1string(string,stop);
+
+	closedir(dp);
+	return;
 }
 
-void getDecrypted1String(char * string){
-	if(strcmp(string,".") == 0 || strcmp(string,"..") == 0) return;
-	char * slash = strstr(string,"/");
-	if(slash != NULL) {
-		int stop = strlen(slash);
-		for(int i=stop;i>=0;i--){
-			if(slash[i] == '/') break;
-			if(slash[i] == '.'){
-				stop = i;
-				break;
-			}
+void decryptDir1(const char *dirPath) {
+	char currDir[500];
+	strcpy(currDir,dirPath);
+
+	DIR *dp;
+	struct dirent *de;
+
+	dp = opendir(currDir);
+	if (dp == NULL)
+		return;
+
+	while ((de = readdir(dp)) != NULL) {
+		if (strcmp(de->d_name,".")==0 || strcmp(de->d_name,"..")==0) {
+			continue;
 		}
-		decrypt1string(slash+1,stop);
+		struct stat st;
+		memset(&st, 0, sizeof(st));
+		st.st_ino = de->d_ino;
+		st.st_mode = de->d_type << 12;
+		char fullpath[1000];
+		sprintf(fullpath,"%s/%s",currDir,de->d_name);
+		if (S_ISREG(st.st_mode)) {
+			decryptedString1(fullpath);
+		} else if (S_ISDIR(st.st_mode)) {
+			decryptDir1(fullpath);
+			decryptedString1(fullpath);
+		} else {
+			continue;
+		}
 	}
+
+	closedir(dp);
+	return;
 }
 
 void getTime(char * dest){
@@ -163,9 +240,6 @@ void printWarning(char * args){
 static int xmp_getattr(const char *path, struct stat *stbuf)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -184,10 +258,6 @@ static int xmp_getattr(const char *path, struct stat *stbuf)
 static int xmp_access(const char *path, int mask)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0){
-		getDecrypted1String(AtoZ);
-    }
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -207,9 +277,6 @@ static int xmp_access(const char *path, int mask)
 static int xmp_readlink(const char *path, char *buf, size_t size)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -237,10 +304,6 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 	(void) offset;
 	(void) fi;
 
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
-
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
     
@@ -255,13 +318,12 @@ static int xmp_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
 		return -errno;
 
 	while ((de = readdir(dp)) != NULL) {
+		if (strcmp(de->d_name, ".") == 0 || strcmp(de->d_name, "..") == 0)
+            continue;
 		struct stat st;
 		memset(&st, 0, sizeof(st));
 		st.st_ino = de->d_ino;
 		st.st_mode = de->d_type << 12;
-
-        if(AtoZ != NULL)
-            getEncrypted1String(de->d_name);
         
         res = (filler(buf,de->d_name,&st,0));
 		
@@ -335,11 +397,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 static int xmp_unlink(const char *path)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0){
-		getDecrypted1String(AtoZ);
-		printf("debug dec getattr path : %s\n",path);
-	}
+
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
 
@@ -359,11 +417,7 @@ static int xmp_unlink(const char *path)
 static int xmp_rmdir(const char *path)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0){
-		getDecrypted1String(AtoZ);
-		printf("debug dec getattr path : %s\n",path);
-	}
+
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
 
@@ -410,9 +464,6 @@ static int xmp_rename(const char *from, const char *to)
     if(strstr(to, "AtoZ_") != NULL) {
         printf("x\n");
         char logbuf[3000];
-        char *tmp = strstr(from, "AtoZ_");
-        char tmp2[500];
-        char tmp3[500];
         sprintf(logbuf,"%s %s %s", f, "->", t);
         printlog(logbuf);
     }
@@ -422,10 +473,21 @@ static int xmp_rename(const char *from, const char *to)
 	printInfo(logbuffer);
 	memset(lastCommand,0,sizeof(lastCommand));
 	strcpy(lastCommand,"rename");
+
+	char *tmpChrPFrom = strrchr(from,'/');
+	char *tmpChrPTo = strrchr(to,'/');
+	if (strstr(tmpChrPFrom,"AtoZ_")!=NULL && strstr(tmpChrPTo,"AtoZ_")==NULL) {
+		decryptDir1(f);
+	}
+
     
 	res = rename(f, t);
 	if (res == -1)
 		return -errno;
+
+	if (strstr(tmpChrPFrom,"AtoZ_")==NULL && strstr(tmpChrPTo,"AtoZ_")!=NULL) {
+		encryptDir1(t);
+	}
 
 	return 0;
 }
@@ -450,9 +512,6 @@ static int xmp_link(const char *from, const char *to)
 static int xmp_chmod(const char *path, mode_t mode)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -474,9 +533,6 @@ static int xmp_chmod(const char *path, mode_t mode)
 static int xmp_chown(const char *path, uid_t uid, gid_t gid)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -546,9 +602,6 @@ static int xmp_utimens(const char *path, const struct timespec ts[2])
 static int xmp_open(const char *path, struct fuse_file_info *fi)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -573,9 +626,6 @@ static int xmp_read(const char *path, char *buf, size_t size, off_t offset,
 {
 	int fd;
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -605,9 +655,6 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 {
 	int fd;
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -635,9 +682,6 @@ static int xmp_write(const char *path, const char *buf, size_t size,
 static int xmp_statfs(const char *path, struct statvfs *stbuf)
 {
 	int res;
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
 	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
@@ -706,10 +750,6 @@ static int xmp_fsync(const char *path, int isdatasync,
 static int xmp_setxattr(const char *path, const char *name, const char *value,
 			size_t size, int flags)
 {
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0){
-		getDecrypted1String(AtoZ);
-	}
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
 
@@ -728,10 +768,6 @@ static int xmp_setxattr(const char *path, const char *name, const char *value,
 static int xmp_getxattr(const char *path, const char *name, char *value,
 			size_t size)
 {
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
-	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
     
@@ -749,10 +785,6 @@ static int xmp_getxattr(const char *path, const char *name, char *value,
 
 static int xmp_listxattr(const char *path, char *list, size_t size)
 {
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
-	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
     
@@ -770,10 +802,6 @@ static int xmp_listxattr(const char *path, char *list, size_t size)
 
 static int xmp_removexattr(const char *path, const char *name)
 {
-	char * AtoZ = strstr(path,"AtoZ_");
-	if(AtoZ != NULL && strcmp(lastCommand,"readdir") == 0)
-		getDecrypted1String(AtoZ);
-	
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
     
