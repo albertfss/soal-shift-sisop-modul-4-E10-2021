@@ -79,6 +79,21 @@ char endec1(char x) {
 	}
 	return x;
 }
+void customEncryptSolo1(char *path) {
+	char filepath[500];
+	int start = 0;
+	
+	strcpy(filepath,path);
+
+	char *edit = strrchr(filepath, '/');
+
+	while(edit[start] != '.' && start < strlen(edit)) {
+	// Iterate until file extension
+		edit[start] = endec1(edit[start]);
+		start++;
+	}
+	rename(path,filepath);
+}
 
 void encryptedString1(char * string){
 	char filepath[500];
@@ -370,8 +385,9 @@ static int xmp_mkdir(const char *path, mode_t mode)
 
 	char fpath[PATH_MAX];
 	linkDownloads(path, fpath);
+	char *fldName = strrchr(fpath, '/');
     
-    if(strstr(fpath, "AtoZ_") != NULL) {
+    if(strstr(fpath, "AtoZ_") != NULL && strstr(fldName, "AtoZ_") != NULL) {
         char logbuf[3000];
         char *tmp = strstr(fpath, "AtoZ_");
         char f[1000];
@@ -388,6 +404,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	strcpy(lastCommand,"mkdir");
 
 	res = mkdir(fpath, mode);
+	if(strstr(fldName, "AtoZ_") == NULL && strstr(fpath, "AtoZ_") != NULL) customEncryptSolo1(fpath);
 	if (res == -1)
 		return -errno;
 
@@ -716,8 +733,13 @@ static int xmp_create(const char* path, mode_t mode, struct fuse_file_info* fi) 
 
     int res;
     res = creat(fpath, mode);
+
+	if(strstr(fpath, "AtoZ_") != NULL) {
+		customEncryptSolo1(fpath);
+	}
+
     if(res == -1)
-	return -errno;
+		return -errno;
 
     close(res);
     return 0;
