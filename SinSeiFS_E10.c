@@ -79,7 +79,41 @@ char endec1(char x) {
 	}
 	return x;
 }
-void customEncryptSolo1(char *path) {
+
+char endec2(char x, int encode) {
+	// control flow memiliki logic yang sama karena yang perlu diencode hanya alphabet saja
+	// if(encode) {
+		if(x >= 'a' && x <= 'z') {
+			x -= 'a';
+			x += 13;
+			x %= 26;
+			x += 'a';
+		}
+		else if(x >= 'A' && x <= 'Z'){
+			x -= 'A';
+			x += 13;
+			x %= 26;
+			x += 'A';
+		}
+	// }
+	// else {
+	// 	if(x >= 'a' && x <= 'z') {
+	// 		x -= 'a';
+	// 		if(x-13 < 0) x += 26;
+
+	// 		x += 'a';
+	// 	}
+	// 	else if(x >= 'A' && x <= 'Z'){
+	// 		x -= 'A';
+	// 		x -= 13;
+	// 		x %= 26;
+	// 		x += 'A';
+	// 	}
+	// }
+	return x;
+}
+
+void customEncryptSolo1(char *path, int type) {
 	char filepath[500];
 	int start = 0;
 	
@@ -87,10 +121,25 @@ void customEncryptSolo1(char *path) {
 
 	char *edit = strrchr(filepath, '/');
 
-	while(edit[start] != '.' && start < strlen(edit)) {
-	// Iterate until file extension
-		edit[start] = endec1(edit[start]);
-		start++;
+	if(type == 1) {
+		while(edit[start] != '.' && start < strlen(edit)) {
+		// Iterate until file extension
+			edit[start] = endec1(edit[start]);
+			start++;
+		}
+	}
+	else if(type == 2) {
+		while(edit[start] != '.' && start < strlen(edit)) {
+		// Iterate until file extension
+			edit[start] = endec1(edit[start]);
+			start++;
+		}
+		start = 0;
+		while(edit[start] != '.' && start < strlen(edit)) {
+		// Iterate until file extension
+			edit[start] = endec2(edit[start], 1);
+			start++;
+		}
 	}
 	rename(path,filepath);
 }
@@ -213,6 +262,85 @@ void decryptDir1(const char *dirPath) {
 		} else if (S_ISDIR(st.st_mode)) {
 			decryptDir1(fullpath);
 			decryptedString1(fullpath);
+		} else {
+			continue;
+		}
+	}
+
+	closedir(dp);
+	return;
+}
+
+void endecString(char * string, int encode, int type){
+	char filepath[500];
+	int start = 0;
+	char *tmpChrP;
+	int tmpStart;
+
+	strcpy(filepath,string);
+	if ((tmpChrP = strrchr(filepath+1,'/'))!=NULL) {
+		start = tmpChrP-filepath;
+		tmpStart = start;
+	} else {
+	// Else, this is the /encv1_ itself, there's nothing to encrypt or decrypt
+		return;
+	}
+
+	int fileExtIdx;
+	if ((tmpChrP = strrchr(filepath, '.'))!=NULL) {
+		fileExtIdx = tmpChrP-filepath;
+	} else {
+		fileExtIdx = strlen(filepath);
+	}
+	if(type == 1) {
+		while(start != fileExtIdx) {
+		// Iterate until file extension
+			filepath[start] = endec1(filepath[start]);
+			start++;
+		}
+	}
+	else if(type == 2) {
+		while(start != fileExtIdx) {
+		// Iterate until file extension
+			filepath[start] = endec2(filepath[start], encode);
+			start++;
+		}
+		start = tmpStart;
+		while(start != fileExtIdx) {
+		// Iterate until file extension
+			filepath[start] = endec1(filepath[start]);
+			start++;
+		}
+	}
+	
+	rename(string,filepath);
+}
+
+void endecDir(const char *dirPath, int encode, int type) {
+	char currDir[3000];
+	strcpy(currDir,dirPath);
+
+	DIR *dp;
+	struct dirent *de;
+	dp = opendir(currDir);
+	if (dp == NULL)
+		return;
+
+	while ((de = readdir(dp)) != NULL) {
+		if (strcmp(de->d_name,".")==0 || strcmp(de->d_name,"..")==0) {
+			continue;
+		}
+		struct stat st;
+		memset(&st, 0, sizeof(st));
+		st.st_ino = de->d_ino;
+		st.st_mode = de->d_type << 12;
+		char fullpath[4000];
+		sprintf(fullpath,"%s/%s",currDir,de->d_name);
+		if (S_ISREG(st.st_mode)) {
+			endecString(fullpath, encode, type);
+		} else if (S_ISDIR(st.st_mode)) {
+			endecDir(fullpath, encode, type);
+			endecString(fullpath, encode, type);
 		} else {
 			continue;
 		}
@@ -397,6 +525,17 @@ static int xmp_mkdir(const char *path, mode_t mode)
         sprintf(logbuf,"%s %s %s", f, "->", t);
         printlog(logbuf);
     }
+
+	if(strstr(fpath, "RX_") != NULL && strstr(fldName, "RX_") != NULL) {
+        char logbuf[3000];
+        char *tmp = strstr(fpath, "RX_");
+        char f[1000];
+        char t[1000];
+        sprintf(f,"%s/%s", dirpath, tmp+3);
+        sprintf(t,"%s/%s", dirpath, tmp);
+        sprintf(logbuf,"MKDIR::%s %s %s", f, "->", t);
+        printlog(logbuf);
+    }
 	char logbuffer[1000];
 	sprintf(logbuffer,"%s::%s","MKDIR",path);
 	printInfo(logbuffer);
@@ -404,7 +543,8 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	strcpy(lastCommand,"mkdir");
 
 	res = mkdir(fpath, mode);
-	if(strstr(fldName, "AtoZ_") == NULL && strstr(fpath, "AtoZ_") != NULL) customEncryptSolo1(fpath);
+	if(strstr(fldName, "AtoZ_") == NULL && strstr(fpath, "AtoZ_") != NULL) customEncryptSolo1(fpath, 1);
+	if(strstr(fldName, "RX_") == NULL && strstr(fpath, "RX_") != NULL) customEncryptSolo1(fpath, 2);
 	if (res == -1)
 		return -errno;
 
@@ -479,9 +619,13 @@ static int xmp_rename(const char *from, const char *to)
     sprintf(t, "%s%s", dirpath, to);
     printf("%s\n%s\n",from, to);
     if(strstr(to, "AtoZ_") != NULL) {
-        printf("x\n");
         char logbuf[3000];
         sprintf(logbuf,"%s %s %s", f, "->", t);
+        printlog(logbuf);
+    }
+	if(strstr(to, "RX_") != NULL) {
+        char logbuf[3000];
+        sprintf(logbuf,"RENAME::%s %s %s", f, "->", t);
         printlog(logbuf);
     }
 
@@ -493,17 +637,23 @@ static int xmp_rename(const char *from, const char *to)
 
 	char *tmpChrPFrom = strrchr(from,'/');
 	char *tmpChrPTo = strrchr(to,'/');
-	if (strstr(tmpChrPFrom,"AtoZ_")!=NULL && strstr(tmpChrPTo,"AtoZ_")==NULL) {
-		decryptDir1(f);
-	}
 
+	if (strstr(tmpChrPFrom,"AtoZ_")!=NULL && strstr(tmpChrPTo,"AtoZ_")==NULL) {
+		// decryptDir1(f);
+		endecDir(f, 0, 1);
+	}
+	if (strstr(tmpChrPFrom,"RX_")!=NULL && strstr(tmpChrPTo,"RX_")==NULL) {
+		// decryptDir1(f);
+		endecDir(f, 0, 2);
+	}
     
 	res = rename(f, t);
 	if (res == -1)
 		return -errno;
 
 	if (strstr(tmpChrPFrom,"AtoZ_")==NULL && strstr(tmpChrPTo,"AtoZ_")!=NULL) {
-		encryptDir1(t);
+		// encryptDir1(t);
+		endecDir(t, 1, 1);
 	}
 
 	return 0;
@@ -735,7 +885,10 @@ static int xmp_create(const char* path, mode_t mode, struct fuse_file_info* fi) 
     res = creat(fpath, mode);
 
 	if(strstr(fpath, "AtoZ_") != NULL) {
-		customEncryptSolo1(fpath);
+		customEncryptSolo1(fpath, 1);
+	}
+	if(strstr(fpath, "RX_") != NULL) {
+		customEncryptSolo1(fpath, 2);
 	}
 
     if(res == -1)
