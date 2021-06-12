@@ -104,3 +104,21 @@ WARNING::28052021-10:02:00:UNLINK::/rename.txt
 ## **Kendala**
 
 - Tidak paham untuk menggunakan fungsi-fungsi yang ada pada fuse sehingga tidak semua logging pada fungsi dapat diuji (sebagai contoh fungsi `utimens`) .
+
+# **Screenshot**
+
+- Filesystem terhubung dengan direktori /home/user/Downloads
+  
+![linked](https://i.ibb.co/CMDNQWs/Screenshot-from-2021-06-12-06-55-31.png)
+
+- File akan ter-encode jika awalan dari direktori adalah `AtoZ_`
+
+![encode1](https://i.ibb.co/JK4VtGS/Screenshot-from-2021-06-12-07-02-17.png)
+
+![encode2](https://i.ibb.co/1ZBWkwb/Screenshot-from-2021-06-12-07-05-09.png)
+
+- Logging
+
+![logging1](https://i.ibb.co/TkywQQR/Screenshot-from-2021-06-12-07-09-29.png)
+
+![logging2](https://i.ibb.co/rygkvYj/Screenshot-from-2021-06-12-07-09-56.png)
