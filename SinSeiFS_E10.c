@@ -68,14 +68,11 @@ char endec1(char x) {
 		x = x - 'a' + 1;
 		x = max - x;
 		x += 'a';
-		return x;
 	}
-
 	else if( x >= 'A' && x <= 'Z') {
 		x = x - 'A' + 1;
 		x = max - x;
 		x += 'A';
-		return x;
 	}
 	return x;
 }
@@ -371,9 +368,9 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	linkDownloads(path, fpath);
 	char *fldName = strrchr(fpath, '/');
     
-    if(strstr(fpath, "AtoZ_") != NULL && strstr(fldName, "AtoZ_") != NULL) {
+    if(strstr(fpath, "/AtoZ_") != NULL && strstr(fldName, "/AtoZ_") != NULL) {
         char logbuf[3000];
-        char *tmp = strstr(fpath, "AtoZ_");
+        char *tmp = strstr(fpath, "/AtoZ_");
         char f[1000];
         char t[1000];
         sprintf(f,"%s/%s", dirpath, tmp+5);
@@ -382,9 +379,9 @@ static int xmp_mkdir(const char *path, mode_t mode)
         printlog(logbuf);
     }
 
-	if(strstr(fpath, "RX_") != NULL && strstr(fldName, "RX_") != NULL) {
+	if(strstr(fpath, "/RX_") != NULL && strstr(fldName, "/RX_") != NULL) {
         char logbuf[3000];
-        char *tmp = strstr(fpath, "RX_");
+        char *tmp = strstr(fpath, "/RX_");
         char f[1000];
         char t[1000];
         sprintf(f,"%s/%s", dirpath, tmp+3);
@@ -399,8 +396,8 @@ static int xmp_mkdir(const char *path, mode_t mode)
 	strcpy(lastCommand,"mkdir");
 
 	res = mkdir(fpath, mode);
-	if(strstr(fldName, "AtoZ_") == NULL && strstr(fpath, "AtoZ_") != NULL) customEncryptSolo1(fpath, 1);
-	if(strstr(fldName, "RX_") == NULL && strstr(fpath, "RX_") != NULL) customEncryptSolo1(fpath, 2);
+	if(strstr(fldName, "/AtoZ_") == NULL && strstr(fpath, "/AtoZ_") != NULL) customEncryptSolo1(fpath, 1);
+	if(strstr(fldName, "/RX_") == NULL && strstr(fpath, "/RX_") != NULL) customEncryptSolo1(fpath, 2);
 	if (res == -1)
 		return -errno;
 
@@ -474,12 +471,12 @@ static int xmp_rename(const char *from, const char *to)
     sprintf(f, "%s%s", dirpath, from);
     sprintf(t, "%s%s", dirpath, to);
     printf("%s\n%s\n",from, to);
-    if(strstr(to, "AtoZ_") != NULL) {
+    if(strstr(to, "/AtoZ_") != NULL && strstr(from, "/AtoZ_" == NULL)) {
         char logbuf[3000];
         sprintf(logbuf,"%s %s %s", f, "->", t);
         printlog(logbuf);
     }
-	if(strstr(to, "RX_") != NULL) {
+	if(strstr(to, "/RX_") != NULL && strstr(from, "/RX_") == NULL) {
         char logbuf[3000];
         sprintf(logbuf,"RENAME::%s %s %s", f, "->", t);
         printlog(logbuf);
@@ -494,12 +491,10 @@ static int xmp_rename(const char *from, const char *to)
 	char *tmpChrPFrom = strrchr(from,'/');
 	char *tmpChrPTo = strrchr(to,'/');
 
-	if (strstr(tmpChrPFrom,"AtoZ_")!=NULL && strstr(tmpChrPTo,"AtoZ_")==NULL) {
-		// decryptDir1(f);
+	if (strstr(tmpChrPFrom,"/AtoZ_")!=NULL && strstr(tmpChrPTo,"/AtoZ_")==NULL) {
 		endecDir(f, 0, 1);
 	}
-	if (strstr(tmpChrPFrom,"RX_")!=NULL && strstr(tmpChrPTo,"RX_")==NULL) {
-		// decryptDir1(f);
+	if (strstr(tmpChrPFrom,"/RX_")!=NULL && strstr(tmpChrPTo,"/RX_")==NULL) {
 		endecDir(f, 0, 2);
 	}
     
@@ -507,8 +502,7 @@ static int xmp_rename(const char *from, const char *to)
 	if (res == -1)
 		return -errno;
 
-	if (strstr(tmpChrPFrom,"AtoZ_")==NULL && strstr(tmpChrPTo,"AtoZ_")!=NULL) {
-		// encryptDir1(t);
+	if (strstr(tmpChrPFrom,"/AtoZ_")==NULL && strstr(tmpChrPTo,"/AtoZ_")!=NULL) {
 		endecDir(t, 1, 1);
 	}
 
@@ -740,10 +734,10 @@ static int xmp_create(const char* path, mode_t mode, struct fuse_file_info* fi) 
     int res;
     res = creat(fpath, mode);
 
-	if(strstr(fpath, "AtoZ_") != NULL) {
+	if(strstr(fpath, "/AtoZ_") != NULL) {
 		customEncryptSolo1(fpath, 1);
 	}
-	if(strstr(fpath, "RX_") != NULL) {
+	if(strstr(fpath, "/RX_") != NULL) {
 		customEncryptSolo1(fpath, 2);
 	}
 
