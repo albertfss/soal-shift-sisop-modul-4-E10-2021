@@ -241,14 +241,14 @@ void printlog(char * args){
 void printInfo(char * args){
 	char message[10000],timestamp[40];
 	getTime(timestamp);
-	sprintf(message,"%s::%s::%s","INFO",timestamp,args);
+	sprintf(message,"%s::%s:%s","INFO",timestamp,args);
 	printlog(message);
 }
 
 void printWarning(char * args){
 	char message[10000],timestamp[40];
 	getTime(timestamp);
-	sprintf(message,"%s::%s::%s","WARNING",timestamp,args);
+	sprintf(message,"%s::%s:%s","WARNING",timestamp,args);
 	printlog(message);
 }
 
