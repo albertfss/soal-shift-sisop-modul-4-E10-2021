@@ -373,7 +373,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
         char *tmp = strstr(fpath, "/AtoZ_");
         char f[1000];
         char t[1000];
-        sprintf(f,"%s/%s", dirpath, tmp+5);
+        sprintf(f,"%s/%s", dirpath, tmp+6);
         sprintf(t,"%s/%s", dirpath, tmp);
         sprintf(logbuf,"%s %s %s", f, "->", t);
         printlog(logbuf);
@@ -384,7 +384,7 @@ static int xmp_mkdir(const char *path, mode_t mode)
         char *tmp = strstr(fpath, "/RX_");
         char f[1000];
         char t[1000];
-        sprintf(f,"%s/%s", dirpath, tmp+3);
+        sprintf(f,"%s/%s", dirpath, tmp+4);
         sprintf(t,"%s/%s", dirpath, tmp);
         sprintf(logbuf,"MKDIR::%s %s %s", f, "->", t);
         printlog(logbuf);
