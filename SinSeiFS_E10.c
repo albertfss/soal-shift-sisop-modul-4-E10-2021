@@ -82,19 +82,18 @@ char endec1(char x) {
 
 char endec2(char x, int encode) {
 	// control flow memiliki logic yang sama karena yang perlu diencode hanya alphabet saja
-	// if(encode) {
-		if(x >= 'a' && x <= 'z') {
-			x -= 'a';
-			x += 13;
-			x %= 26;
-			x += 'a';
-		}
-		else if(x >= 'A' && x <= 'Z'){
-			x -= 'A';
-			x += 13;
-			x %= 26;
-			x += 'A';
-		}
+	if(x >= 'a' && x <= 'z') {
+		x -= 'a';
+		x += 13;
+		x %= 26;
+		x += 'a';
+	}
+	else if(x >= 'A' && x <= 'Z'){
+		x -= 'A';
+		x += 13;
+		x %= 26;
+		x += 'A';
+	}
 	return x;
 }
 
