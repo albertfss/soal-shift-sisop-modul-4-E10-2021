@@ -5,6 +5,15 @@
 - Ahmad Luthfi Hanif (05111940000179)
 - Albert Filip Silalahi (05111940000116)
 
+# Table of Contents
+- [Soal 1](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#soal-1)
+- [Soal 2](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#soal-2)
+- [Soal 3](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#soal-3)
+- [Soal 4](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#soal-4)
+- [Source Code](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#potongan-source-code)
+- [Screenshot](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#screenshot)
+- [Referensi](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#referensi-template)
+
 # **Soal 1**
 
 - Soal ini dikerjakan oleh 05111940000096 - Stefanus Albert Kosim.
@@ -486,6 +495,6 @@ Potonga-potongan kode tersebut digunakan ke semua fungsi fuse sesuai dengan leve
 
 ![logging4](https://i.ibb.co/dBNhnZM/Screenshot-from-2021-06-12-16-37-06.png)
 
-# **Referensi Template**
+# **Referensi**
 
-www.andysayler.com
+- [Template Fuse](https://github.com/asayler/CU-CS3753-PA5/blob/master/fusexmp.c)
