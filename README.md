@@ -12,7 +12,7 @@
 - [Soal 4](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#soal-4)
 - [Source Code](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#potongan-source-code)
 - [Screenshot](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#screenshot)
-- [Referensi](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#referensi-template)
+- [Referensi](https://github.com/albertfss/soal-shift-sisop-modul-4-E10-2021#referensi)
 
 # **Soal 1**
 
